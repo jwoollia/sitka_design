@@ -14,7 +14,7 @@ subroutine transition(tk)
 integer, dimension(:), intent(inout) :: tk
 integer, dimension(2) :: iswap
 integer :: idum
-REAL(KIND=dp), DIMENSION(2) :: u
+real(kind=dp), dimension(2) :: u
 call random_number(u(1:2))
 iswap(1)=ceiling(real(nfam)*u(1))
 iswap(2)=ceiling(real(ncro-nfam)*u(2))
