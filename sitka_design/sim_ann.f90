@@ -51,14 +51,15 @@ END module an_function
 !<<<<<<<<<<<<
 module anneal
 !<<<<<<<<<<<<
+USE sitka_param
 USE an_function
 INTEGER, PARAMETER, PRIVATE :: dp=KIND(0.0d0)
 save
 contains
 !
-!====================================================================
-subroutine an_engine(best,fbest,t_ini,t_factr,t_steps,n_over,n_limit)
-!====================================================================
+!===========================================================================
+subroutine an_engine(best,fbest,t_ini,t_factr,t_steps,n_over,n_limit,r_file)
+!===========================================================================
 !
 ! b villanueva 09/00 ... modified jaw
 ! annealing parameters are
@@ -68,25 +69,30 @@ subroutine an_engine(best,fbest,t_ini,t_factr,t_steps,n_over,n_limit)
 ! tfactr = factor by which temp is reduced on each step
 ! nover  = maximum number of modifications tried at any temperature
 ! nlimit = maximum number of successful changes before continuing
+! rfile  = report file
 !
 implicit none
 INTEGER, DIMENSION(:), INTENT(INOUT) :: best
 REAL(KIND=dp), INTENT(OUT) :: fbest
-INTEGER, INTENT(IN), OPTIONAL :: t_steps,n_over,n_limit
+INTEGER, INTENT(IN), OPTIONAL :: t_steps,n_over,n_limit,r_file
 REAL(KIND=dp), INTENT(IN), OPTIONAL :: t_ini,t_factr
-INTEGER :: tsteps,nover,nlimit,nsucc,ic,jc
+INTEGER :: tsteps,nover,nlimit,nsucc,ic,jc,rfile,rflag,msucc
 REAL(KIND=dp) :: tini,tfactr,del,score,temp,u
-INTEGER, DIMENSION(SIZE(best)) :: trial
+INTEGER, DIMENSION(SIZE(best)) :: trial,rxval
+REAL(KIND=dp) :: rfval
 !
 IF(PRESENT(t_ini)) THEN; tini=t_ini; ELSE; tini=1_dp; END if
 IF(PRESENT(t_factr)) THEN; tfactr=t_factr; ELSE; tfactr=0.9_dp; END if
 IF(PRESENT(t_steps)) THEN; tsteps=t_steps; ELSE; tsteps=200; END if
-IF(PRESENT(n_over)) then; nover=n_over; ELSE; nover=100; END if
+IF(PRESENT(n_over)) THEN; nover=n_over; ELSE; nover=100; END if
 IF(PRESENT(n_limit)) THEN; nlimit=n_limit; ELSE; nlimit=20; END if
+IF(PRESENT(r_file)) THEN; rfile=r_file; END if
 OPEN(60,FILE='an_file.txt')
 !
 temp=tini
 fbest=an_fun(best)
+rflag=nlimit
+msucc=nlimit
 across_t: do ic=1,tsteps      ! try up to tsteps temperature steps
     nsucc=0
     within_t: do jc=1,nover
@@ -97,15 +103,30 @@ across_t: do ic=1,tsteps      ! try up to tsteps temperature steps
         call random_number(u)
         if((del<=0_dp).or.(u<exp(-del/temp)))then
             nsucc=nsucc+1
+            if(fbest>score) then
+                rfval=fbest
+                rxval=best
+            end if
             fbest=score
             best=trial
         end if
         if(nsucc>=nlimit) exit within_t
     end do within_t
-    ! WRITE(60,*) 'T ... ',temp,' ... function value ... ',fbest,' ... successful modifications ... ',nsucc
+    if(present(r_file)) then
+        if(nsucc<msucc) msucc=nsucc
+        if(nsucc<rflag) then
+            write(rfile,'(a,i8,a,i8)') ' ... ANNEAL successful modifications first < ',rflag,' after step ',ic
+            rflag=rflag/2
+        end if
+    end if
     if(nsucc==0) exit across_t
     temp=temp*tfactr
 end do across_t
+if(fbest>rfval) then
+    fbest=rfval
+    best=rxval
+end if
+if(present(r_file)) write(rfile,'(a,i8)') ' ... ANNEAL minimum successful modifications per step ',msucc
 end subroutine an_engine
 !
 !>>>>>>>>>>>>>>>>
