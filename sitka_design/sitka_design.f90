@@ -85,7 +85,7 @@ call seed_set(20,16)
 call ranperm(keep)
 fval=an_fun(keep)
 ! go
-call an_engine(keep,fval,t_ini=tinit,t_factr=tfact,t_steps=tstep,n_over=nover,n_limit=nlim,r_file=16)
+call an_engine(keep,fval,t_ini=tinit,t_factr=tfact,t_steps=tstep,n_over=nover,n_limit=nlim,r_unit=16)
 ! final
 fval=an_fun(keep)
 write(16,'(a,f6.0)') ' ... final function value ... ',fval

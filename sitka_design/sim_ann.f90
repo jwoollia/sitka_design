@@ -58,7 +58,7 @@ save
 contains
 !
 !===========================================================================
-subroutine an_engine(best,fbest,t_ini,t_factr,t_steps,n_over,n_limit,r_file)
+subroutine an_engine(best,fbest,t_ini,t_factr,t_steps,n_over,n_limit,r_unit)
 !===========================================================================
 !
 ! b villanueva 09/00 ... modified jaw
@@ -74,9 +74,9 @@ subroutine an_engine(best,fbest,t_ini,t_factr,t_steps,n_over,n_limit,r_file)
 implicit none
 INTEGER, DIMENSION(:), INTENT(INOUT) :: best
 REAL(KIND=dp), INTENT(OUT) :: fbest
-INTEGER, INTENT(IN), OPTIONAL :: t_steps,n_over,n_limit,r_file
+INTEGER, INTENT(IN), OPTIONAL :: t_steps,n_over,n_limit,r_unit
 REAL(KIND=dp), INTENT(IN), OPTIONAL :: t_ini,t_factr
-INTEGER :: tsteps,nover,nlimit,nsucc,ic,jc,rfile,rflag,msucc
+INTEGER :: tsteps,nover,nlimit,nsucc,ic,jc,runit,rflag,msucc
 REAL(KIND=dp) :: tini,tfactr,del,score,temp,u
 INTEGER, DIMENSION(SIZE(best)) :: trial,rxval
 REAL(KIND=dp) :: rfval
@@ -86,8 +86,15 @@ IF(PRESENT(t_factr)) THEN; tfactr=t_factr; ELSE; tfactr=0.9_dp; END if
 IF(PRESENT(t_steps)) THEN; tsteps=t_steps; ELSE; tsteps=200; END if
 IF(PRESENT(n_over)) THEN; nover=n_over; ELSE; nover=100; END if
 IF(PRESENT(n_limit)) THEN; nlimit=n_limit; ELSE; nlimit=20; END if
-IF(PRESENT(r_file)) THEN; rfile=r_file; END if
-OPEN(60,FILE='an_file.txt')
+IF(PRESENT(r_unit)) THEN; runit=r_unit; END if
+!
+if(present(r_unit)) then
+    write(runit,'(a,f12.6)') ' ... ANNEAL initial temperature        ... ',tini
+    write(runit,'(a,f12.6)') ' ... ANNEAL temperature decay rate     ... ',tfactr
+    write(runit,'(a,i12)')   ' ... ANNEAL decay steps                ... ',tsteps
+    write(runit,'(a,i12)')   ' ... ANNEAL maximum trials per step    ... ',nover
+    write(runit,'(a,i12)')   ' ... ANNEAL maximum successes per step ... ',nover
+end if
 !
 temp=tini
 fbest=an_fun(best)
@@ -112,10 +119,10 @@ across_t: do ic=1,tsteps      ! try up to tsteps temperature steps
         end if
         if(nsucc>=nlimit) exit within_t
     end do within_t
-    if(present(r_file)) then
+    if(present(r_unit)) then
         if(nsucc<msucc) msucc=nsucc
         if(nsucc<rflag) then
-            write(rfile,'(a,i8,a,i8)') ' ... ANNEAL successful modifications first < ',rflag,' after step ',ic
+            write(runit,'(a,i8,a,i8)') ' ... ANNEAL successful modifications first < ',rflag,' after step ',ic
             rflag=rflag/2
         end if
     end if
@@ -126,7 +133,10 @@ if(fbest>rfval) then
     fbest=rfval
     best=rxval
 end if
-if(present(r_file)) write(rfile,'(a,i8)') ' ... ANNEAL minimum successful modifications per step ',msucc
+if(present(r_unit)) then
+    write(runit,'(a,i8)') ' ... ANNEAL completed at step ',min(ic,tsteps)  
+    write(runit,'(a,i8)') ' ... ANNEAL minimum successful modifications per step ',msucc
+end if
 end subroutine an_engine
 !
 !>>>>>>>>>>>>>>>>

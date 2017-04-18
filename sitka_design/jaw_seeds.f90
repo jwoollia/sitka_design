@@ -38,7 +38,7 @@ else ! find a seed and open
   call RANDOM_SEED(get=iseed)
   OPEN(sunit,file='jawseed.txt',STATUS='NEW',ACTION='READWRITE')
 END if
-IF(PRESENT(runit)) WRITE(runit,*) ' ... RANDOM NUMBER seed ... ',iseed
+IF(PRESENT(runit)) WRITE(runit,'(a,2i12)') ' ... RANDOM NUMBER seeds ... ',iseed
 do k=1,SIZE(iseed) ! for next seed
   call RANDOM_NUMBER(u)
   iseed(k)=FLOOR(100000000.0d0*u)
