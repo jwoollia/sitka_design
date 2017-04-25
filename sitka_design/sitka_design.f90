@@ -90,7 +90,7 @@ call an_engine(keep,fval,t_ini=tinit,t_factr=tfact,t_steps=tstep,n_over=nover,n_
 fval=an_fun(keep)
 write(16,'(a,f6.0)') ' ... final function value ... ',fval
 ddum(1)=dot_product(nn,nn); ddum(2)=dot_product(mm,mm); ddum(3)=dot_product(pp,pp);
-write(16,'(a,4f6.0)') ' ... dot products ... ',ddum(:)
+write(16,'(a,4f6.0)') ' ... dot products ... ',ddum(:),sum(pp)
 f_final_par: do ii=1,npar
     if(qq(ii)==0) cycle
     write(16,'(4i5)') idp(ii),nn(ii),mm(ii),pp(ii)

@@ -42,7 +42,7 @@ where(nn>0)
     qq=1
     nn=nn-2
 end where
-an_fun=c(1)*dot_product(nn,nn)+c(2)*dot_product(mm,mm)+c(3)*dot_product(pp,pp)
+an_fun=c(1)*dot_product(nn,nn)+c(2)*dot_product(mm,mm)+c(3)*dot_product(pp,pp)+1000.0*sum(pp)**2 ! last term promotes balance
 end function an_fun
 !
 !>>>>>>>>>>>>>>>>>>>>>
@@ -122,12 +122,13 @@ across_t: do ic=1,tsteps      ! try up to tsteps temperature steps
     if(present(r_unit)) then
         if(nsucc<msucc) msucc=nsucc
         if(nsucc<rflag) then
-            write(runit,'(a,i8,a,i8)') ' ... ANNEAL successful modifications first < ',rflag,' after step ',ic
+            write(runit,'(a,i8,a,i8,a,f8.5)') ' ... ANNEAL successful modifications first < ',rflag,' after step ',ic,' temperature ',temp
             rflag=rflag/2
         end if
     end if
     if(nsucc==0) exit across_t
     temp=temp*tfactr
+    if(mod(ic,2000)==0) print *,' ... ANNEAL finished step ',ic
 end do across_t
 if(fbest>rfval) then
     fbest=rfval
